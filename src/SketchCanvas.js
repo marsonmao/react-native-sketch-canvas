@@ -61,7 +61,6 @@ class SketchCanvas extends React.Component {
     this._path = null
     this._handle = null
     this._screenScale = Platform.OS === 'ios' ? 1 : Dimensions.get('window').scale
-    this._offset = { x: 0, y: 0 }
     this._size = { width: 0, height: 0 }
     this._initialized = false
   }
@@ -150,7 +149,6 @@ class SketchCanvas extends React.Component {
       onPanResponderGrant: (evt, gestureState) => {
         if (!this.props.touchEnabled) return;
         const e = evt.nativeEvent;
-        this._offset = { x: e.pageX - e.locationX, y: e.pageY - e.locationY };
         this._path = {
           id: parseInt(Math.random() * 100000000), color: this.props.strokeColor, 
           width: this.props.strokeWidth, data: []
