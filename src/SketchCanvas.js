@@ -131,6 +131,14 @@ class SketchCanvas extends React.Component {
     }
   }
 
+  toFixed2 = (rawValue) => {
+    return parseFloat(rawValue.toFixed(2));
+  }
+
+  toScreenValue = (nativeValue) => {
+    return this.toFixed2(nativeValue) * this._screenScale;
+  }
+
   componentWillMount() {
     this.panResponder = PanResponder.create({
       // Ask to be the responder:
@@ -140,48 +148,42 @@ class SketchCanvas extends React.Component {
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
 
       onPanResponderGrant: (evt, gestureState) => {
-        if (!this.props.touchEnabled) return
-        const e = evt.nativeEvent
-        this._offset = { x: e.pageX - e.locationX, y: e.pageY - e.locationY }
+        if (!this.props.touchEnabled) return;
+        const e = evt.nativeEvent;
+        this._offset = { x: e.pageX - e.locationX, y: e.pageY - e.locationY };
         this._path = {
           id: parseInt(Math.random() * 100000000), color: this.props.strokeColor, 
           width: this.props.strokeWidth, data: []
-        }
+        };
         
         if (Platform.OS === 'ios') {
-          SketchCanvasManager.newPath(this._path.id, processColor(this._path.color), this._path.width)
-          SketchCanvasManager.addPoint(
-            parseFloat((gestureState.x0 - this._offset.x).toFixed(2) * this._screenScale),
-            parseFloat((gestureState.y0 - this._offset.y).toFixed(2) * this._screenScale)
-          )
+          SketchCanvasManager.newPath(this._path.id, processColor(this._path.color), this._path.width);
+          SketchCanvasManager.addPoint(this.toScreenValue(e.locationX), this.toScreenValue(e.locationY));
         } else {
           UIManager.dispatchViewManagerCommand(this._handle, UIManager.RNSketchCanvas.Commands.newPath, [
             this._path.id, processColor(this._path.color), this._path.width,
-          ])
+          ]);
           UIManager.dispatchViewManagerCommand(this._handle, UIManager.RNSketchCanvas.Commands.addPoint, [
-            parseFloat((gestureState.x0 - this._offset.x).toFixed(2) * this._screenScale),
-            parseFloat((gestureState.y0 - this._offset.y).toFixed(2) * this._screenScale)
-          ])
+            this.toScreenValue(e.locationX), this.toScreenValue(e.locationY)
+          ]);
         }
-        this._path.data.push(`${parseFloat(gestureState.x0 - this._offset.x).toFixed(2)},${parseFloat(gestureState.y0 - this._offset.y).toFixed(2)}`)
-        this.props.onStrokeStart()
+        this._path.data.push(`${this.toFixed2(e.locationX)},${this.toFixed2(e.locationY)}`);
+        this.props.onStrokeStart();
       },
       onPanResponderMove: (evt, gestureState) => {
-        if (!this.props.touchEnabled) return
+        if (!this.props.touchEnabled) return;
+        const e = evt.nativeEvent;
+
         if (this._path) {
           if (Platform.OS === 'ios') {
-            SketchCanvasManager.addPoint(
-              parseFloat((gestureState.moveX - this._offset.x).toFixed(2) * this._screenScale), 
-              parseFloat((gestureState.moveY - this._offset.y).toFixed(2) * this._screenScale)
-            )
+            SketchCanvasManager.addPoint(this.toScreenValue(e.locationX), this.toScreenValue(e.locationY));
           } else {
             UIManager.dispatchViewManagerCommand(this._handle, UIManager.RNSketchCanvas.Commands.addPoint, [
-              parseFloat((gestureState.moveX - this._offset.x).toFixed(2) * this._screenScale), 
-              parseFloat((gestureState.moveY - this._offset.y).toFixed(2) * this._screenScale)
-            ])
+              this.toScreenValue(e.locationX), this.toScreenValue(e.locationY)
+            ]);
           }
-          this._path.data.push(`${parseFloat(gestureState.moveX - this._offset.x).toFixed(2)},${parseFloat(gestureState.moveY - this._offset.y).toFixed(2)}`)
-          this.props.onStrokeChanged()
+          this._path.data.push(`${this.toFixed2(e.locationX)},${this.toFixed2(e.locationY)}`);
+          this.props.onStrokeChanged();
         }
       },
       onPanResponderRelease: (evt, gestureState) => {
