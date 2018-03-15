@@ -30,9 +30,8 @@ RCT_EXPORT_VIEW_PROPERTY(onChange, RCTBubblingEventBlock);
 
 - (UIView *)view
 {
-    if (!self.sketchCanvasView) {
-        self.sketchCanvasView = [[RNSketchCanvas alloc] initWithEventDispatcher: self.bridge.eventDispatcher];
-    }
+    // marson 20180315: create new canvas each time, to make it clean and stop crashing
+    self.sketchCanvasView = [[RNSketchCanvas alloc] initWithEventDispatcher: self.bridge.eventDispatcher];
 
     return self.sketchCanvasView;
 }
